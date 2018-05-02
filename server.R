@@ -91,43 +91,53 @@ shinyServer(function(input, output) {
   d_comp <- reactive({dd_mat(pred_comp,dirr,importance(),type="comp")})
   d_kir <- reactive({dd_mat(pred_kir,dirr,importance(),type="kir")})
   #the plots
+  gg_div <- reactive({ggplot(d_div(),aes(x=fragm,y=Med,group=divF)) +
+    geom_ribbon(aes(ymin=LCI,ymax=UCI,fill=divF),alpha=0.2) +
+    geom_path(aes(color=divF)) +
+    labs(fill="Species richness",color="Species richness",x="Fragmentation intensity (from high to low)",y="Desirability score")})
+  
+  
+  gg_kir <- reactive({ggtern(d_kir(),aes(fsyl,qrob,qrub))+
+    theme_bw()+
+    geom_tri_tern(bins=4,fun=mean,aes(value=Med,fill=..stat..)) +
+    stat_tri_tern(bins=4,fun=mean,geom="text",aes(value=Med,
+                                                  label=sprintf("%.2f",..stat..)),
+                  color="lightgrey",centroid=TRUE) +
+    scale_fill_viridis(option="C") +
+    theme(legend.position = "none")})
+  
+  gg_comp <- reactive({ggplot(d_comp(),aes(x=fragm,y=Med,group=speccomb)) +
+    geom_ribbon(aes(ymin=LCI,ymax=UCI,fill=speccomb),alpha=0.1) +
+    geom_path(aes(color=speccomb),size=2) +
+    labs(fill="Species\ncomposition",color="Species\ncomposition",x="Fragmentation intensity (from high to low)",y="Desirability score")})
+  
   output$div_f_plot <- renderPlot({
     
-    gg <- ggplot(d_div(),aes(x=fragm,y=Med,group=divF)) +
-      geom_ribbon(aes(ymin=LCI,ymax=UCI,fill=divF),alpha=0.2) +
-      geom_path(aes(color=divF)) +
-      labs(fill="Species richness",color="Species richness",x="Fragmentation intensity (from high to low)",y="Desirability score")
-    
-    gg
+    gg_div()
     
   })
   
   
   output$kir_f_plot <- renderPlot({
     
-    gg <- ggtern(d_kir(),aes(fsyl,qrob,qrub))+
-      theme_bw()+
-      geom_tri_tern(bins=4,fun=mean,aes(value=Med,fill=..stat..)) +
-      stat_tri_tern(bins=4,fun=mean,geom="text",aes(value=Med,
-                                                    label=sprintf("%.2f",..stat..)),
-                    color="lightgrey",centroid=TRUE) +
-      scale_fill_viridis(option="C") +
-      theme(legend.position = "none")
-    
-    gg
-    
+    gg_kir()
     
   })
   
   
   output$comp_f_plot <- renderPlot({
-    
-    gg <- ggplot(d_comp(),aes(x=fragm,y=Med,group=speccomb)) +
-      geom_ribbon(aes(ymin=LCI,ymax=UCI,fill=speccomb),alpha=0.1) +
-      geom_path(aes(color=speccomb),size=2) +
-      labs(fill="Species\ncomposition",color="Species\ncomposition",x="Fragmentation intensity (from high to low)",y="Desirability score")
-    gg
+  
+    gg_comp()
     
   })
+  
+  output$dlPlot <- downloadHandler(
+    filename = function() paste0("desire_div_",Sys.Date(),".png"),
+    content = function(file) {
+      tmp <- grid.arrange(gg_div(),gg_kir(),gg_comp(),ncol=3,bottom=round(importance(),2))
+      ggplot2::ggsave(file,plot=tmp,width=35,height=10,units="cm")
+    },
+    contentType = "image/png"
+  )
   
 })

@@ -14,7 +14,10 @@ shinyUI(fluidPage(
   
   # Sidebar with a slider input for number of bins 
   fluidRow(
-      radioButtons("type","Weighting scheme:",c("Default"="default","All equal"="equal","Manual"="manual")),
+      column(6,
+             radioButtons("type","Weighting scheme:",c("Default"="default","All equal"="equal","Manual"="manual"))),
+      column(6,
+             downloadButton("dlPlot","Save graphs")),
       #conditionalPanel(
       #  condition = "input.type == 'default'",
       #  inputs <- lapply()
@@ -158,7 +161,7 @@ shinyUI(fluidPage(
              )
 
     )),
-    textOutput("Test"),
+    #textOutput("Test"),
     # Show a plot of the generated distribution
     tabsetPanel(type="tabs",
                 tabPanel("Diversity-fragmentation",plotOutput("div_f_plot")),
